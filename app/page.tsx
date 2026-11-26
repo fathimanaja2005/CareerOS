@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import Link from "next/link";
 import CoachCard from "@/components/agents/CoachCard";
 import MatchCard from "@/components/agents/MatchCard";
 import RoadmapCard from "@/components/agents/RoadmapCard";
@@ -119,6 +120,11 @@ export default function HomePage() {
         <div className="mx-auto max-w-4xl px-4 py-6 text-xs text-slate-500">
           CareerOS gives an AI-assisted review, not a hiring decision. Always check advice against
           the job description you&apos;re applying to.
+          <div className="mt-2">
+            <Link href="/privacy" className="underline-offset-2 transition-colors hover:text-slate-900 hover:underline">
+              Privacy policy
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
