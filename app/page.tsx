@@ -3,6 +3,7 @@
 import { useState } from "react";
 import CoachCard from "@/components/agents/CoachCard";
 import MatchCard from "@/components/agents/MatchCard";
+import RoadmapCard from "@/components/agents/RoadmapCard";
 import ProfileCard from "@/components/agents/ProfileCard";
 import { AGENTS, type AgentId } from "@/lib/agents/registry";
 
@@ -14,6 +15,7 @@ const CARDS: Record<AgentId, React.ComponentType> = {
   profile: ProfileCard,
   match: MatchCard,
   coach: CoachCard,
+  roadmap: RoadmapCard,
 };
 
 export default function HomePage() {

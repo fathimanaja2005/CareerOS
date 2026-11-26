@@ -18,6 +18,11 @@ export const AGENTS = [
     label: "Interview coach",
     tagline: "Practise likely questions for one job and get your answers reviewed.",
   },
+  {
+    id: "roadmap",
+    label: "Roadmap",
+    tagline: "A week-by-week plan to close your skill gaps for a role.",
+  },
 ] as const;
 
 export type AgentId = (typeof AGENTS)[number]["id"];
