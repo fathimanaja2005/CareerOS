@@ -10,6 +10,9 @@ role you're targeting, and get:
   options and an About rewrite.
 - Missing skills for the target role, and a confidence note.
 
+A second tab, **Job match**, compares one job description with your profile: a match score, the
+skills the job names that you already show, the ones you don't, and the gaps to close first.
+
 Scores are **computed in code**, not by the model: the model only supplies per-area scores, and
 `lib/scoring.ts` clamps them and does the arithmetic.
 
@@ -28,18 +31,28 @@ Scores are **computed in code**, not by the model: the model only supplies per-a
 ```
 app/
   layout.tsx              root layout
-  page.tsx                the one page (form + results)
+  page.tsx                tab shell: top nav + one card per agent
   globals.css             Tailwind entry
-  api/analyze/route.ts    POST endpoint: validate -> model -> Zod -> score -> JSON
+  api/analyze/route.ts    POST: validate body -> runAgent(profileAgent)
+  api/match/route.ts      POST: validate body -> runAgent(matchAgent)
 components/
-  ResultsView.tsx         score cards, breakdowns, rewrites, headlines, skills
+  ResultsView.tsx         profile score cards, breakdowns, rewrites, headlines
+  MatchResults.tsx        match score, breakdown, matched/missing skills, gaps
   CopyButton.tsx          copy-to-clipboard
   PlaceholderText.tsx     highlights [placeholders] in rewrites
+  agents/                 one UI card per agent
+    ProfileCard.tsx
+    MatchCard.tsx
+    TextField.tsx         labelled textarea with a character counter
 lib/
+  agents/
+    run.ts                runAgent(): model call -> JSON -> Zod (one retry) -> postProcess
+    shared.ts             shared breakdown/fix schemas and types
+    registry.ts           tab labels, in order
+    profile/              prompt.ts, schema.ts, index.ts (config + scoring)
+    match/                prompt.ts, schema.ts, index.ts (config + scoring)
   llm.ts                  callModel() + LLM_CONFIG (provider/model/temperature/timeout)
-  prompt.ts               SYSTEM_PROMPT + buildUserInput()
-  rubric.ts               area names + maxima (the single source of truth)
-  schema.ts               Zod schemas and shared types
+  rubric.ts               profile area names + maxima (the single source of truth)
   scoring.ts              clamping + normalisation maths
   rate-limit.ts           in-memory per-IP limiter
 tests/
@@ -47,6 +60,23 @@ tests/
   consistency.mjs         runs each sample 3x and prints score spread
   samples/                3 fictional profiles
 ```
+
+## Agents
+
+An agent is four things, all of them local to its folder:
+
+1. `prompt.ts` — the system prompt and `buildUserInput()`.
+2. `schema.ts` — the Zod schema for the reply, plus the rubric and result type.
+3. `index.ts` — the `AgentConfig` object (prompt + schema + `buildUserInput`) and an optional
+   `postProcess` that scores, orders and renames the validated output.
+4. A UI card in `components/agents/`, plus its tab label in `lib/agents/registry.ts`.
+
+`runAgent()` in `lib/agents/run.ts` does the rest for every agent: it calls the model, extracts the
+JSON, validates it with Zod, retries once on invalid JSON, and returns a friendly `LlmError` when it
+still fails. Routes only validate the request body and call `runAgent(agent, input)`.
+
+To add a third agent, copy the `match/` folder, point it at a new prompt and schema, add its card
+and register the tab. Nothing in `run.ts`, `llm.ts` or the other agents changes.
 
 ## 1. Setup
 
@@ -146,9 +176,10 @@ Then restart `npm run dev`.
 **Privacy:** the resume and LinkedIn text are used in memory for the request only. They are not
 written to a database, a file, or the logs, and the app stores nothing between requests.
 
-**The system prompt** lives in `lib/prompt.ts` as `SYSTEM_PROMPT`. The rubric it describes must
-match `lib/rubric.ts`, which drives validation, scoring and the UI; you can reword the prompt
-freely as long as the JSON shape still matches `lib/schema.ts`.
+**The prompts** live in `lib/agents/<agent>/prompt.ts`. The profile prompt's rubric must match
+`lib/rubric.ts`, which drives validation, scoring and the UI; the match prompt's rubric is
+`MATCH_RUBRIC` in `lib/agents/match/schema.ts`. You can reword either prompt freely as long as the
+JSON shape still matches that agent's schema.
 
 **Switching providers:** edit `LLM_CONFIG` in `lib/llm.ts` (`provider`, `model`, `temperature`,
 `timeoutMs`, `retries`) and add the matching case in `buildRequest()`. Nothing else needs to change.

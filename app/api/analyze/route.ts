@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { callModel, LlmError } from "@/lib/llm";
-import { SYSTEM_PROMPT, buildUserInput } from "@/lib/prompt";
-import { analysisSchema, type AnalysisResult } from "@/lib/schema";
-import { LINKEDIN_RUBRIC, RESUME_RUBRIC } from "@/lib/rubric";
-import { applyRubric, clampBreakdown, computeSectionScore } from "@/lib/scoring";
+import { LlmError } from "@/lib/llm";
+import { profileAgent } from "@/lib/agents/profile";
+import { runAgent } from "@/lib/agents/run";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 // Node runtime: we only need fetch, and 60s covers the model's thinking time on Hobby.
@@ -68,13 +66,11 @@ export async function POST(request: Request) {
     );
   }
 
-  // --- Call the model, validate the JSON, retry once if it is malformed -----
+  // --- Model call, JSON validation (one retry) and scoring -----------------
   // Note: the resume/LinkedIn text is never logged and never stored.
-  const userInput = buildUserInput({ targetRole, resumeText, linkedinText });
-
-  let analysis;
   try {
-    analysis = await getValidAnalysis(userInput);
+    const result = await runAgent(profileAgent, { targetRole, resumeText, linkedinText });
+    return NextResponse.json(result);
   } catch (error) {
     const message =
       error instanceof LlmError
@@ -82,83 +78,5 @@ export async function POST(request: Request) {
         : "The AI returned an unexpected format. Please try again.";
     const status = error instanceof LlmError ? error.status : 422;
     return NextResponse.json({ error: message }, { status });
-  }
-
-  // --- Compute scores in code (never trust the model's arithmetic) ----------
-  // applyRubric sets the rubric order and maxima; clampBreakdown keeps scores in range.
-  const resumeBreakdown = clampBreakdown(applyRubric(analysis.resume.breakdown, RESUME_RUBRIC));
-  const linkedinBreakdown = clampBreakdown(
-    applyRubric(analysis.linkedin.breakdown, LINKEDIN_RUBRIC),
-  );
-
-  const result: AnalysisResult = {
-    targetRole,
-    resume: {
-      ...analysis.resume,
-      breakdown: resumeBreakdown,
-      top_fixes: sortByPriority(analysis.resume.top_fixes),
-      score: computeSectionScore(resumeBreakdown),
-    },
-    linkedin: {
-      ...analysis.linkedin,
-      breakdown: linkedinBreakdown,
-      top_fixes: sortByPriority(analysis.linkedin.top_fixes),
-      score: computeSectionScore(linkedinBreakdown),
-    },
-    missing_skills_for_role: analysis.missing_skills_for_role,
-    confidence_note: analysis.confidence_note,
-  };
-
-  return NextResponse.json(result);
-}
-
-/**
- * Ask the model for JSON and validate it. If the first reply is not valid JSON
- * (or does not match the schema) we ask once more, then give up with a clear error.
- */
-async function getValidAnalysis(userInput: string) {
-  let lastError: unknown;
-
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const prompt =
-      attempt === 0
-        ? userInput
-        : `${userInput}\n\nYour previous reply was not valid JSON for the required schema. Reply with ONLY the JSON object, no code fences and no commentary.`;
-
-    const raw = await callModel(SYSTEM_PROMPT, prompt);
-    const json = extractJson(raw);
-    if (json === null) {
-      lastError = new Error("Model reply did not contain a JSON object");
-      continue;
-    }
-
-    const parsed = analysisSchema.safeParse(json);
-    if (parsed.success) return parsed.data;
-    lastError = parsed.error;
-  }
-
-  throw lastError;
-}
-
-/** Top fixes are always shown in priority order (1 first). */
-function sortByPriority<T extends { priority: number }>(fixes: T[]): T[] {
-  return [...fixes].sort((a, b) => a.priority - b.priority);
-}
-
-/** Pull the JSON object out of a reply, tolerating stray code fences. */
-function extractJson(text: string): unknown {
-  const cleaned = text
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "");
-
-  const start = cleaned.indexOf("{");
-  const end = cleaned.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) return null;
-
-  try {
-    return JSON.parse(cleaned.slice(start, end + 1));
-  } catch {
-    return null;
   }
 }

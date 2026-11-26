@@ -1,4 +1,4 @@
-import type { BreakdownItem, SectionScore } from "./schema";
+import type { BreakdownItem, SectionScore } from "./agents/shared";
 import type { RubricArea } from "./rubric";
 
 /**

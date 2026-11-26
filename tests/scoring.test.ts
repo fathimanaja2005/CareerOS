@@ -7,7 +7,7 @@ import {
   computeSectionScore,
 } from "../lib/scoring.ts";
 import { RESUME_RUBRIC } from "../lib/rubric.ts";
-import type { BreakdownItem } from "../lib/schema.ts";
+import type { BreakdownItem } from "../lib/agents/shared.ts";
 
 function item(area: string, score: number | null, max: number): BreakdownItem {
   return { area, score, max, reason: "test" };

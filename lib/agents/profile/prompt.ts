@@ -1,11 +1,17 @@
 /**
- * The system prompt for the profile review.
+ * The system prompt for the profile review agent.
  *
  * The area names and maxima below must stay in sync with lib/rubric.ts, which
  * is the single source of truth used for validation, scoring and the UI. The
- * JSON shape must match lib/schema.ts, because every reply is validated with
+ * JSON shape must match ./schema.ts, because every reply is validated with
  * Zod before it is scored.
  */
+
+export type ProfileInput = {
+  targetRole: string;
+  resumeText: string;
+  linkedinText: string;
+};
 
 export const SYSTEM_PROMPT = `You are the Profile Analyst for CareerOS, an AI career guide for fresh graduates in India.
 
@@ -99,11 +105,7 @@ OUTPUT: valid JSON only, matching the existing schema:
 }`;
 
 /** Builds the user message from the three form fields. */
-export function buildUserInput(input: {
-  targetRole: string;
-  resumeText: string;
-  linkedinText: string;
-}): string {
+export function buildUserInput(input: ProfileInput): string {
   return [
     `TARGET ROLE: ${input.targetRole}`,
     "",

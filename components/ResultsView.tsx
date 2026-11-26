@@ -1,6 +1,7 @@
 "use client";
 
-import type { AnalysisResult, BreakdownItem, Fix, SectionScore } from "@/lib/schema";
+import type { AnalysisResult } from "@/lib/agents/profile/schema";
+import type { BreakdownItem, Fix, SectionScore } from "@/lib/agents/shared";
 import CopyButton from "./CopyButton";
 import PlaceholderText from "./PlaceholderText";
 
