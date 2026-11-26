@@ -4,6 +4,7 @@ import { useState } from "react";
 import CoachCard from "@/components/agents/CoachCard";
 import MatchCard from "@/components/agents/MatchCard";
 import RoadmapCard from "@/components/agents/RoadmapCard";
+import ShortlistCard from "@/components/agents/ShortlistCard";
 import ProfileCard from "@/components/agents/ProfileCard";
 import { AGENTS, type AgentId } from "@/lib/agents/registry";
 
@@ -16,6 +17,7 @@ const CARDS: Record<AgentId, React.ComponentType> = {
   match: MatchCard,
   coach: CoachCard,
   roadmap: RoadmapCard,
+  shortlist: ShortlistCard,
 };
 
 export default function HomePage() {

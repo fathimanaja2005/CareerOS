@@ -23,6 +23,11 @@ export const AGENTS = [
     label: "Roadmap",
     tagline: "A week-by-week plan to close your skill gaps for a role.",
   },
+  {
+    id: "shortlist",
+    label: "Shortlister",
+    tagline: "Rank several real job posts against your resume.",
+  },
 ] as const;
 
 export type AgentId = (typeof AGENTS)[number]["id"];
