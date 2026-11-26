@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import TextField from "./TextField";
+import ResumeField from "./ResumeField";
+import { useSharedValue } from "@/lib/shared-value";
 import { ErrorBox, PrivacyNote, Spinner } from "./ProfileCard";
 import type { CoachQuestion, FeedbackResult, QuestionsResult } from "@/lib/agents/coach/schema";
 
@@ -26,9 +28,9 @@ async function callCoach<T>(body: Record<string, unknown>): Promise<T> {
 /** UI card for the Interview Coach: get questions for one job, then practise answers. */
 export default function CoachCard() {
   const [company, setCompany] = useState("");
-  const [roleTitle, setRoleTitle] = useState("");
+  const [roleTitle, setRoleTitle] = useSharedValue("role");
   const [jobDescription, setJobDescription] = useState("");
-  const [resumeText, setResumeText] = useState("");
+  const [resumeText, setResumeText] = useSharedValue("resume");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -95,14 +97,7 @@ export default function CoachCard() {
           />
         </div>
         <div className="mt-5">
-          <TextField
-            id="coachResume"
-            label="Resume (optional, adds questions about your own projects)"
-            placeholder="Paste your resume as plain text…"
-            value={resumeText}
-            onChange={setResumeText}
-            rows={6}
-          />
+          <ResumeField id="coachResume" label="Resume (optional, adds questions about your own projects)" value={resumeText} onChange={setResumeText} rows={6} />
         </div>
 
         <PrivacyNote />

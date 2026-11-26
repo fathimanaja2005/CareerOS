@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from "react";
 import TextField from "./TextField";
+import ResumeField from "./ResumeField";
+import { useSharedValue } from "@/lib/shared-value";
 import { ErrorBox, LoadingCard, PrivacyNote, Spinner } from "./ProfileCard";
 import type { RoadmapResult } from "@/lib/agents/roadmap/schema";
 
 /** UI card for the Roadmap agent: role + resume (+ job description), then a weekly plan. */
 export default function RoadmapCard() {
-  const [roleTitle, setRoleTitle] = useState("");
+  const [roleTitle, setRoleTitle] = useSharedValue("role");
   const [jobDescription, setJobDescription] = useState("");
-  const [resumeText, setResumeText] = useState("");
+  const [resumeText, setResumeText] = useSharedValue("resume");
   const [weeks, setWeeks] = useState(8);
   const [hoursPerWeek, setHoursPerWeek] = useState(8);
 
@@ -129,14 +131,7 @@ export default function RoadmapCard() {
         </div>
 
         <div className="mt-5">
-          <TextField
-            id="roadmapResume"
-            label="Resume"
-            placeholder="Paste your resume as plain text…"
-            value={resumeText}
-            onChange={setResumeText}
-            rows={8}
-          />
+          <ResumeField id="roadmapResume" label="Resume" value={resumeText} onChange={setResumeText} rows={8} />
         </div>
         <div className="mt-5">
           <TextField

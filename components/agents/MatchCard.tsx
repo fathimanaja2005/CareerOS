@@ -3,15 +3,17 @@
 import { useEffect, useState } from "react";
 import MatchResults from "@/components/MatchResults";
 import TextField from "./TextField";
+import ResumeField from "./ResumeField";
+import { useSharedValue } from "@/lib/shared-value";
 import { ErrorBox, LoadingCard, PrivacyNote, Spinner } from "./ProfileCard";
 import type { MatchResult } from "@/lib/agents/match/schema";
 
 /** UI card for the job match agent: resume + job description + company/role, then results. */
 export default function MatchCard() {
-  const [resumeText, setResumeText] = useState("");
+  const [resumeText, setResumeText] = useSharedValue("resume");
   const [jobDescription, setJobDescription] = useState("");
   const [company, setCompany] = useState("");
-  const [roleTitle, setRoleTitle] = useState("");
+  const [roleTitle, setRoleTitle] = useSharedValue("role");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -135,13 +137,7 @@ export default function MatchCard() {
         </div>
 
         <div className="mt-5">
-          <TextField
-            id="matchResumeText"
-            label="Resume"
-            placeholder="Paste your resume as plain text…"
-            value={resumeText}
-            onChange={setResumeText}
-          />
+          <ResumeField id="matchResumeText" value={resumeText} onChange={setResumeText} />
         </div>
 
         <PrivacyNote />

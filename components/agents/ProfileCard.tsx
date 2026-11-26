@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import PlanEmailOptIn from "@/components/PlanEmailOptIn";
 import ResultsView from "@/components/ResultsView";
 import TextField from "./TextField";
+import ResumeField from "./ResumeField";
+import { useSharedValue } from "@/lib/shared-value";
 import type { AnalysisResult } from "@/lib/agents/profile/schema";
 
 /** UI card for the profile review agent: form, loading/error states, results. */
 export default function ProfileCard() {
-  const [targetRole, setTargetRole] = useState("");
-  const [resumeText, setResumeText] = useState("");
+  const [targetRole, setTargetRole] = useSharedValue("role");
+  const [resumeText, setResumeText] = useSharedValue("resume");
   const [linkedinText, setLinkedinText] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -103,17 +105,13 @@ export default function ProfileCard() {
         </div>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <TextField
-            id="resumeText"
-            label="Resume"
-            placeholder="Paste your resume as plain text…"
-            value={resumeText}
-            onChange={setResumeText}
-          />
-          <TextField
+          <ResumeField id="resumeText" value={resumeText} onChange={setResumeText} />
+          <ResumeField
             id="linkedinText"
             label="LinkedIn"
-            placeholder="Paste your LinkedIn headline, About, experience and skills…"
+            placeholder="Paste your LinkedIn headline, About, experience and skills, or upload your LinkedIn PDF below…"
+            clearLabel="Clear LinkedIn text"
+            note="On LinkedIn: your profile, then More, then Save to PDF."
             value={linkedinText}
             onChange={setLinkedinText}
           />
