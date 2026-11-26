@@ -12,6 +12,8 @@ import { recordScore } from "@/lib/history";
 import { gradeFor, summariseInterview } from "@/lib/interview";
 import type { CoachQuestion, FeedbackResult, QuestionsResult } from "@/lib/agents/coach/schema";
 
+const MAX_QUESTIONS = 36;
+
 type Context = { roleTitle: string; company: string; jobDescription: string };
 
 async function callCoach<T>(body: Record<string, unknown>): Promise<T> {
@@ -42,6 +44,30 @@ export default function CoachCard() {
   const [questions, setQuestions] = useState<CoachQuestion[] | null>(null);
   const [context, setContext] = useState<Context | null>(null);
   const [feedbacks, setFeedbacks] = useState<Record<number, FeedbackResult>>({});
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  async function handleMore() {
+    if (loadingMore || !context || !questions) return;
+    setError("");
+    setLoadingMore(true);
+    try {
+      const data = await callCoach<QuestionsResult>({
+        mode: "questions",
+        roleTitle: context.roleTitle,
+        company: context.company,
+        jobDescription: context.jobDescription,
+        resumeText,
+        alreadyAsked: questions.map((q) => q.question),
+      });
+      const seen = new Set(questions.map((q) => q.question.trim().toLowerCase()));
+      const fresh = data.questions.filter((q) => !seen.has(q.question.trim().toLowerCase()));
+      setQuestions([...questions, ...fresh].slice(0, MAX_QUESTIONS));
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "Something went wrong.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -145,6 +171,27 @@ export default function CoachCard() {
               onFeedback={(result) => setFeedbacks((current) => ({ ...current, [index]: result }))}
             />
           ))}
+
+          {questions.length < MAX_QUESTIONS && (
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleMore}
+                disabled={loadingMore}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loadingMore ? (
+                  <>
+                    <Spinner />
+                    Finding more questions…
+                  </>
+                ) : (
+                  "Get 12 more questions"
+                )}
+              </button>
+              <p className="text-xs text-slate-500">{questions.length} questions so far. New ones never repeat the earlier ones.</p>
+            </div>
+          )}
 
           <PlanEmailOptIn
             targetRole={context.roleTitle}

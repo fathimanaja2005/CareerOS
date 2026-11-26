@@ -24,7 +24,7 @@ export const questionSchema = z.object({
 });
 
 export const questionsAnalysisSchema = z.object({
-  questions: z.array(questionSchema).min(3).max(8),
+  questions: z.array(questionSchema).min(3).max(15),
 });
 
 export type CoachQuestion = z.infer<typeof questionSchema>;

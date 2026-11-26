@@ -8,6 +8,8 @@ export type QuestionsInput = {
   company: string;
   jobDescription: string;
   resumeText: string;
+  /** Questions the student already has; a follow-up request must not repeat them. */
+  alreadyAsked?: string[];
 };
 
 export type FeedbackInput = {
@@ -19,9 +21,10 @@ export type FeedbackInput = {
 };
 
 export const QUESTIONS_PROMPT = `You are the Interview Coach for CareerOS, helping fresh graduates in India prepare for one specific job.
-INPUT: a role title, a company name, a job description and optionally the student's resume.
+INPUT: a role title, a company name, a job description, optionally the student's resume, and optionally a list of questions ALREADY ASKED.
 RULES:
-- Write 6 questions: 2 technical or skill questions taken from the job description requirements, 2 behavioural questions, 1 role-specific scenario, and 1 resume-based question only if a resume is given (otherwise another behavioural question).
+- Write 12 questions: 4 technical or skill questions taken from the job description requirements, 4 behavioural questions, 2 role-specific scenarios, and 2 resume-based questions only if a resume is given (otherwise 2 more behavioural questions). Do not repeat or reword a question.
+- If a list of ALREADY ASKED questions is given, every new question must cover a different topic. Never repeat, reword or lightly vary any of them.
 - Base every question ONLY on the job description and resume. Never state facts about the company: you have no internet access.
 - For each question say in one sentence what the interviewer is really looking for.
 - A resume-based question may only mention details that are written in the resume, word for word or clearly the same. Never add methods, tools, steps or numbers the resume does not state (for example, do not say "by checking duplicates" if the resume only says "cleaned data"). Ask the student to explain how they did it instead.
@@ -62,6 +65,9 @@ export function buildQuestionsInput(input: QuestionsInput): string {
     "RESUME TEXT:",
     input.resumeText || "(not provided)",
     "",
+    ...(input.alreadyAsked && input.alreadyAsked.length > 0
+      ? ["ALREADY ASKED:", ...input.alreadyAsked.map((q, i) => `${i + 1}. ${q}`), ""]
+      : []),
     "Return the JSON object now.",
   ].join("\n");
 }

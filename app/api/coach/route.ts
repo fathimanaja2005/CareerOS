@@ -11,6 +11,7 @@ const MAX_TEXT_LENGTH = 15_000;
 const MAX_ANSWER_LENGTH = 4_000;
 const MAX_SHORT_LENGTH = 120;
 const MAX_QUESTION_LENGTH = 500;
+const MAX_ASKED = 40;
 
 function bad(error: string, status = 400) {
   return NextResponse.json({ error }, { status });
@@ -59,7 +60,14 @@ export async function POST(request: Request) {
     if (body.mode === "questions") {
       const resumeText = text(body.resumeText);
       if (resumeText.length > MAX_TEXT_LENGTH) return bad("Resume text is too long.");
-      const result = await runAgent(questionsAgent, { roleTitle, company, jobDescription, resumeText });
+      const alreadyAsked = Array.isArray(body.alreadyAsked)
+        ? body.alreadyAsked
+            .filter((q): q is string => typeof q === "string")
+            .map((q) => q.trim().slice(0, MAX_QUESTION_LENGTH))
+            .filter(Boolean)
+            .slice(0, MAX_ASKED)
+        : [];
+      const result = await runAgent(questionsAgent, { roleTitle, company, jobDescription, resumeText, alreadyAsked });
       return NextResponse.json(result);
     }
 
