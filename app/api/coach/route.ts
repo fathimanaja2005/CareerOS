@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { LlmError } from "@/lib/llm";
 import { feedbackAgent, questionsAgent } from "@/lib/agents/coach";
 import { runAgent } from "@/lib/agents/run";
+import { unknownCompanyError } from "@/lib/company-guard";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -67,8 +68,11 @@ export async function POST(request: Request) {
             .filter(Boolean)
             .slice(0, MAX_ASKED)
         : [];
-      const result = await runAgent(questionsAgent, { roleTitle, company, jobDescription, resumeText, alreadyAsked });
-      return NextResponse.json(result);
+      const [unknown, result] = await Promise.all([
+        unknownCompanyError(company, roleTitle),
+        runAgent(questionsAgent, { roleTitle, company, jobDescription, resumeText, alreadyAsked }),
+      ]);
+      return NextResponse.json(unknown ? { ...result, companyWarning: unknown } : result);
     }
 
     if (body.mode === "feedback") {

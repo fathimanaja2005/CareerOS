@@ -6,6 +6,7 @@ import TextField from "./TextField";
 import ResumeField from "./ResumeField";
 import { useSharedValue } from "@/lib/shared-value";
 import { addApplication, navigateTo } from "@/lib/history";
+import CompanyWarning from "@/components/CompanyWarning";
 import { ErrorBox, LoadingCard, PrivacyNote, Spinner } from "./ProfileCard";
 import type { TailorResult } from "@/lib/agents/tailor/schema";
 
@@ -21,6 +22,7 @@ export default function TailorCard() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
   const [result, setResult] = useState<TailorResult | null>(null);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export default function TailorCard() {
     event.preventDefault();
     if (loading) return;
     setError("");
+    setWarning("");
     setResult(null);
 
     if (!roleTitle.trim() || !resumeText.trim() || !jobDescription.trim()) {
@@ -55,6 +58,7 @@ export default function TailorCard() {
         );
       }
       setResult(data as TailorResult);
+      setWarning(typeof data.companyWarning === "string" ? data.companyWarning : "");
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : "Something went wrong.");
     } finally {
@@ -142,6 +146,7 @@ export default function TailorCard() {
       </form>
 
       <ErrorBox error={error} />
+      <CompanyWarning text={warning} />
       {loading && <LoadingCard />}
 
       <div id="tailor-results" className="mt-10 scroll-mt-6">

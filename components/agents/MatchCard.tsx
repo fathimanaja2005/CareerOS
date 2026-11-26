@@ -6,6 +6,7 @@ import MatchResults from "@/components/MatchResults";
 import TextField from "./TextField";
 import ResumeField from "./ResumeField";
 import { useSharedValue } from "@/lib/shared-value";
+import CompanyWarning from "@/components/CompanyWarning";
 import { ErrorBox, LoadingCard, PrivacyNote, Spinner } from "./ProfileCard";
 import type { MatchResult } from "@/lib/agents/match/schema";
 
@@ -18,6 +19,7 @@ export default function MatchCard() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
   const [result, setResult] = useState<MatchResult | null>(null);
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export default function MatchCard() {
     if (loading) return;
 
     setError("");
+    setWarning("");
     setResult(null);
 
     if (!resumeText.trim()) {
@@ -68,6 +71,7 @@ export default function MatchCard() {
       }
 
       setResult(data as MatchResult);
+      setWarning(typeof data.companyWarning === "string" ? data.companyWarning : "");
       recordScore("match", company ? `${roleTitle} at ${company}` : roleTitle, (data as MatchResult).score.normalisedScore);
     } catch (err) {
       setError(
@@ -161,6 +165,7 @@ export default function MatchCard() {
       </form>
 
       <ErrorBox error={error} />
+      <CompanyWarning text={warning} />
       {loading && <LoadingCard />}
 
       <div id="match-results" className="mt-10 scroll-mt-6">

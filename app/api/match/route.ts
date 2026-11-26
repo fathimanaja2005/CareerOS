@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { LlmError } from "@/lib/llm";
 import { matchAgent } from "@/lib/agents/match";
 import { runAgent } from "@/lib/agents/run";
+import { unknownCompanyError } from "@/lib/company-guard";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 // Same runtime and limit as the profile route: one model call per request.
@@ -86,8 +87,11 @@ export async function POST(request: Request) {
   // --- Model call, JSON validation (one retry) and scoring -----------------
   // Note: no part of the request text is logged or stored.
   try {
-    const result = await runAgent(matchAgent, { resumeText, jobDescription, company, roleTitle });
-    return NextResponse.json(result);
+    const [unknown, result] = await Promise.all([
+      unknownCompanyError(company, roleTitle),
+      runAgent(matchAgent, { resumeText, jobDescription, company, roleTitle }),
+    ]);
+    return NextResponse.json(unknown ? { ...result, companyWarning: unknown } : result);
   } catch (error) {
     const message =
       error instanceof LlmError

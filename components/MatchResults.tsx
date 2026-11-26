@@ -1,6 +1,7 @@
 "use client";
 
 import type { MatchResult } from "@/lib/agents/match/schema";
+import CompanyResearch from "./CompanyResearch";
 import CopyButton from "./CopyButton";
 import PlaceholderText from "./PlaceholderText";
 import PlanEmailOptIn from "./PlanEmailOptIn";
@@ -289,18 +290,11 @@ export default function MatchResults({ result }: { result: MatchResult }) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-xl bg-sky-50 p-4 ring-1 ring-sky-100">
-          <h3 className="text-sm font-semibold text-sky-900">
-            Research {result.company} yourself
-          </h3>
-          <p className="mt-1 text-xs text-sky-800">
-            CareerOS has no internet access and states no facts about the company. Find these
-            answers before your interview:
-          </p>
-          <div className="mt-3 text-sky-900">
-            <BulletList items={result.interviewPrep.company_research_checklist} />
-          </div>
-        </div>
+        <CompanyResearch
+          company={result.company}
+          roleTitle={result.roleTitle}
+          checklist={<BulletList items={result.interviewPrep.company_research_checklist} />}
+        />
       </Section>
 
       {/* Confidence note */}
@@ -312,7 +306,7 @@ export default function MatchResults({ result }: { result: MatchResult }) {
       </section>
 
       <p className="text-center text-xs text-slate-400">
-        This review uses only your pasted text. It does not research the company.
+        This review is based on the resume and job description you pasted.
       </p>
 
       {/* Optional automation: email the plan and log the score via n8n */}

@@ -6,6 +6,7 @@ import PlanEmailOptIn from "@/components/PlanEmailOptIn";
 import { coachReport } from "@/lib/report";
 import ResumeField from "./ResumeField";
 import { useSharedValue } from "@/lib/shared-value";
+import CompanyWarning from "@/components/CompanyWarning";
 import { ErrorBox, PrivacyNote, Spinner } from "./ProfileCard";
 import { Bar, ScoreRing } from "@/components/charts";
 import { recordScore } from "@/lib/history";
@@ -43,6 +44,7 @@ export default function CoachCard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [questions, setQuestions] = useState<CoachQuestion[] | null>(null);
+  const [warning, setWarning] = useState("");
   const [context, setContext] = useState<Context | null>(null);
   const [feedbacks, setFeedbacks] = useState<Record<number, FeedbackResult>>({});
   const [loadingMore, setLoadingMore] = useState(false);
@@ -74,6 +76,7 @@ export default function CoachCard() {
     event.preventDefault();
     if (loading) return;
     setError("");
+    setWarning("");
     setQuestions(null);
     setFeedbacks({});
 
@@ -93,6 +96,7 @@ export default function CoachCard() {
       });
       setContext({ roleTitle, company, jobDescription });
       setQuestions(data.questions);
+      setWarning((data as { companyWarning?: string }).companyWarning ?? "");
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : "Something went wrong.");
     } finally {
@@ -153,6 +157,7 @@ export default function CoachCard() {
       </form>
 
       <ErrorBox error={error} />
+      <CompanyWarning text={warning} />
 
       {questions && context && (
         <div className="mt-10 space-y-5">
@@ -160,7 +165,7 @@ export default function CoachCard() {
             Likely questions for {context.roleTitle} at {context.company}
           </h2>
           <p className="text-sm text-slate-500">
-            Built only from the job description you pasted. CareerOS does not research the company.
+            Built from the job description and resume you pasted.
           </p>
           <SessionSummary feedbacks={feedbacks} total={questions.length} roleTitle={context.roleTitle} company={context.company} />
           {questions.map((q, index) => (

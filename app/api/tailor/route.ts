@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { LlmError } from "@/lib/llm";
 import { tailorAgent } from "@/lib/agents/tailor";
 import { runAgent } from "@/lib/agents/run";
+import { unknownCompanyError } from "@/lib/company-guard";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -55,8 +56,11 @@ export async function POST(request: Request) {
 
   // Note: no part of the request text is logged or stored.
   try {
-    const result = await runAgent(tailorAgent, { roleTitle, company, jobDescription, resumeText });
-    return NextResponse.json(result);
+    const [unknown, result] = await Promise.all([
+      unknownCompanyError(company, roleTitle),
+      runAgent(tailorAgent, { roleTitle, company, jobDescription, resumeText }),
+    ]);
+    return NextResponse.json(unknown ? { ...result, companyWarning: unknown } : result);
   } catch (error) {
     const message =
       error instanceof LlmError
