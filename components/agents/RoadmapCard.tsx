@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import TextField from "./TextField";
+import PlanEmailOptIn from "@/components/PlanEmailOptIn";
+import { roadmapReport } from "@/lib/report";
 import ResumeField from "./ResumeField";
 import { useSharedValue } from "@/lib/shared-value";
 import { ErrorBox, LoadingCard, PrivacyNote, Spinner } from "./ProfileCard";
@@ -238,6 +240,13 @@ function RoadmapView({ result }: { result: RoadmapResult }) {
         This plan is an AI-assisted suggestion. CareerOS does not recommend specific courses or
         websites, so choose resources you trust.
       </p>
+
+      <PlanEmailOptIn
+        targetRole={result.roleTitle}
+        topFixes={[]}
+        agent="roadmap"
+        report={roadmapReport(result)}
+      />
     </div>
   );
 }

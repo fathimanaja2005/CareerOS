@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import TextField from "./TextField";
+import { redactContacts } from "@/lib/redact";
 
 const MAX_CHARS = 15_000;
 
@@ -64,13 +65,19 @@ export default function ResumeField({
         }
         text = String(data.text ?? "");
       }
-      const trimmed = text.trim().slice(0, MAX_CHARS);
+      // Phone numbers and emails are removed automatically, so nothing needs editing by hand.
+      const redacted = redactContacts(text.trim());
+      const trimmed = redacted.text.slice(0, MAX_CHARS);
       if (!trimmed) throw new Error("No text found in that file. Try pasting the text instead.");
       onChange(trimmed);
+      const removed =
+        redacted.emails + redacted.phones > 0
+          ? ` Removed ${redacted.phones} phone number${redacted.phones === 1 ? "" : "s"} and ${redacted.emails} email${redacted.emails === 1 ? "" : "s"}.`
+          : "";
       setMessage(
-        text.trim().length > MAX_CHARS
+        (redacted.text.length > MAX_CHARS
           ? "Loaded the first 15,000 characters."
-          : "Loaded. Check that the text looks right before you continue.",
+          : "Loaded. Check that the text looks right before you continue.") + removed,
       );
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Could not read that file.");

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { findJobs } from "@/lib/jobs/remotive";
+import { searchJobs } from "@/lib/jobs/search";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 // Looks up real, current job posts for a role. No AI call is made here.
@@ -24,8 +24,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    const jobs = await findJobs(role);
-    return NextResponse.json({ jobs, source: "Remotive", sourceUrl: "https://remotive.com" });
+    const { jobs, sources } = await searchJobs(role);
+    return NextResponse.json({ jobs, sources });
   } catch {
     return NextResponse.json(
       { error: "Job search is unavailable right now. You can still paste job posts yourself." },

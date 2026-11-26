@@ -13,6 +13,8 @@ export type FoundJob = {
   jobType: string;
   url: string;
   description: string;
+  /** Where the post came from, shown to the student with a link back. */
+  source: string;
 };
 
 const ENDPOINT = "https://remotive.com/api/remote-jobs";
@@ -60,7 +62,46 @@ type RemotiveJob = {
   description?: string;
 };
 
-export function normaliseJobs(raw: unknown, max = 10): FoundJob[] {
+const STOP_WORDS = new Set(["and", "of", "the", "for", "in", "at", "to", "a", "an", "or", "with"]);
+
+function stem(word: string): string {
+  return word.length > 3 ? word.replace(/s$/, "") : word;
+}
+
+function tokens(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(SENIORITY, " ")
+    .split(/[^a-z0-9+#.]+/)
+    .filter((word) => word.length >= 2 && !STOP_WORDS.has(word))
+    .map(stem);
+}
+
+/**
+ * Remotive's search also matches words buried in descriptions, so a search for
+ * "Data Analyst" can return a WordPress developer. We keep only posts whose
+ * TITLE fits the role: it must contain the role's last word (the job noun, e.g.
+ * "analyst"), or, for roles of three or more words, at least half of the role's words.
+ * Best matches come first.
+ */
+export function rankByTitle(jobs: FoundJob[], role: string): FoundJob[] {
+  const wanted = tokens(role);
+  if (wanted.length === 0) return [];
+  const noun = wanted[wanted.length - 1];
+
+  return jobs
+    .map((job) => {
+      const have = new Set(tokens(job.title));
+      const matched = wanted.filter((word) => have.has(word)).length;
+      const fits = have.has(noun) || (wanted.length >= 3 && matched / wanted.length >= 0.5);
+      return { job, matched, fits, ratio: matched / wanted.length };
+    })
+    .filter((entry) => entry.fits && entry.matched > 0)
+    .sort((a, b) => b.ratio - a.ratio)
+    .map((entry) => entry.job);
+}
+
+export function normaliseJobs(raw: unknown, max = 100): FoundJob[] {
   const list = (raw as { jobs?: unknown })?.jobs;
   if (!Array.isArray(list)) return [];
   const jobs: FoundJob[] = [];
@@ -77,22 +118,41 @@ export function normaliseJobs(raw: unknown, max = 10): FoundJob[] {
       jobType: (item.job_type || "").replace(/_/g, " "),
       url: item.url,
       description,
+      source: "Remotive",
     });
     if (jobs.length >= max) break;
   }
   return jobs;
 }
 
-export async function findJobs(role: string): Promise<FoundJob[]> {
-  for (const phrase of searchPhrases(role)) {
-    const url = `${ENDPOINT}?search=${encodeURIComponent(phrase)}&limit=20`;
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(10_000),
-      next: { revalidate: 6 * 60 * 60 },
-    });
-    if (!response.ok) throw new Error(`Remotive responded with ${response.status}`);
-    const jobs = normaliseJobs(await response.json());
-    if (jobs.length > 0) return jobs;
+/** Every Remotive request worth making for a role: phrase searches, the job noun alone, and the data category for data-like roles. */
+export function searchUrls(role: string): string[] {
+  const urls = searchPhrases(role).map((phrase) => `${ENDPOINT}?search=${encodeURIComponent(phrase)}&limit=100`);
+  const noun = tokens(role).pop();
+  if (noun && noun.length >= 4) urls.push(`${ENDPOINT}?search=${encodeURIComponent(noun)}&limit=100`);
+  if (/\b(data|analy\w*|bi|business intelligence|machine learning|ml|ai|statistic\w*)\b/i.test(role)) {
+    urls.push(`${ENDPOINT}?category=data&limit=100`);
   }
-  return [];
+  return [...new Set(urls)];
+}
+
+/** Remotive part only: remote jobs worldwide. See lib/jobs/search.ts for the combined search. */
+export async function findRemotiveJobs(role: string): Promise<FoundJob[]> {
+  const pool = new Map<string, FoundJob>();
+  let reached = 0;
+  for (const url of searchUrls(role)) {
+    try {
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(10_000),
+        next: { revalidate: 6 * 60 * 60 },
+      });
+      if (!response.ok) continue;
+      reached += 1;
+      for (const job of normaliseJobs(await response.json())) pool.set(job.id, job);
+    } catch {
+      // One failed request should not hide results from the others.
+    }
+  }
+  if (reached === 0) throw new Error("Remotive could not be reached");
+  return [...pool.values()];
 }

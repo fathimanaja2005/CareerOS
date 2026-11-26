@@ -4,6 +4,7 @@ import type { MatchResult } from "@/lib/agents/match/schema";
 import CopyButton from "./CopyButton";
 import PlaceholderText from "./PlaceholderText";
 import PlanEmailOptIn from "./PlanEmailOptIn";
+import { matchReport } from "@/lib/report";
 
 /** Same colour scale as the profile results. */
 function scoreTone(value: number | null) {
@@ -319,6 +320,8 @@ export default function MatchResults({ result }: { result: MatchResult }) {
         targetRole={result.roleTitle}
         matchScore={score.normalisedScore}
         topFixes={result.resumeChanges.map((change) => change.issue)}
+        agent="match"
+        report={matchReport(result)}
       />
     </div>
   );

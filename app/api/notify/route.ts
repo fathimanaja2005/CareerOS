@@ -7,6 +7,7 @@ import {
   isValidEmail,
   sendActionPlan,
 } from "@/lib/automation/n8n";
+import { cleanReport, composePlanEmail, composeReportEmail } from "@/lib/automation/email";
 import { getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -15,7 +16,9 @@ export const runtime = "nodejs";
  * Email-plan opt-in endpoint.
  *
  * GET  -> { enabled } so the UI can hide the checkbox when n8n isn't configured.
- * POST -> forwards scores + top fixes (never any resume/LinkedIn/job text) to n8n.
+ * POST -> forwards scores + top fixes to n8n. If the student also ticked the separate
+ *         "full report" consent, the report text is turned into the email body. The
+ *         report is never written to the sheet and never stored by this app.
  *
  * The email address is passed straight to n8n and is not stored by this app.
  */
@@ -91,18 +94,42 @@ export async function POST(request: Request) {
     .filter(Boolean)
     .slice(0, 3);
 
-  if (topFixes.length === 0) {
+  // The full report needs its own consent, checked here and not just in the UI.
+  const wantsReport = body.fullReport === true;
+  if (wantsReport && body.reportConsent !== true) {
+    return NextResponse.json(
+      { error: "Please tick the consent box for the full report." },
+      { status: 400 },
+    );
+  }
+  const report = wantsReport && typeof body.reportText === "string" ? cleanReport(body.reportText) : "";
+  if (wantsReport && report.length < 20) {
+    return NextResponse.json({ error: "There is no report to send yet." }, { status: 400 });
+  }
+
+  if (topFixes.length === 0 && !report) {
     return NextResponse.json({ error: "There are no fixes to send yet." }, { status: 400 });
   }
+
+  const resumeScore = cleanScore(body.resumeScore);
+  const linkedinScore = cleanScore(body.linkedinScore);
+  const matchScore = cleanScore(body.matchScore);
+  const agent = typeof body.agent === "string" ? cleanText(body.agent, 30) : "";
+  const message = report
+    ? composeReportEmail(report)
+    : composePlanEmail({ topFixes, resumeScore, linkedinScore, matchScore });
 
   try {
     await sendActionPlan({
       email,
       target_role: targetRole,
-      resume_score: cleanScore(body.resumeScore),
-      linkedin_score: cleanScore(body.linkedinScore),
-      match_score: cleanScore(body.matchScore),
-      top_fixes: topFixes,
+      resume_score: resumeScore,
+      linkedin_score: linkedinScore,
+      match_score: matchScore,
+      top_fixes: topFixes.length ? topFixes : [`${agent || "CareerOS"} report emailed`],
+      agent,
+      email_subject: message.subject,
+      email_html: message.html,
     });
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import PlanEmailOptIn from "@/components/PlanEmailOptIn";
+import { profileReport } from "@/lib/report";
 import ResultsView from "@/components/ResultsView";
-import TextField from "./TextField";
 import ResumeField from "./ResumeField";
 import { useSharedValue } from "@/lib/shared-value";
 import type { AnalysisResult } from "@/lib/agents/profile/schema";
@@ -146,6 +146,8 @@ export default function ProfileCard() {
             resumeScore={result.resume.score.normalisedScore}
             linkedinScore={result.linkedin.score.normalisedScore}
             topFixes={profileTopFixes(result)}
+            agent="profile"
+            report={profileReport(result)}
           />
         )}
       </div>

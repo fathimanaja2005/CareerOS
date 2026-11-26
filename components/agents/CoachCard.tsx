@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import TextField from "./TextField";
+import PlanEmailOptIn from "@/components/PlanEmailOptIn";
+import { coachReport } from "@/lib/report";
 import ResumeField from "./ResumeField";
 import { useSharedValue } from "@/lib/shared-value";
 import { ErrorBox, PrivacyNote, Spinner } from "./ProfileCard";
@@ -36,12 +38,14 @@ export default function CoachCard() {
   const [error, setError] = useState("");
   const [questions, setQuestions] = useState<CoachQuestion[] | null>(null);
   const [context, setContext] = useState<Context | null>(null);
+  const [feedbacks, setFeedbacks] = useState<Record<number, FeedbackResult>>({});
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (loading) return;
     setError("");
     setQuestions(null);
+    setFeedbacks({});
 
     if (!roleTitle.trim() || !company.trim() || !jobDescription.trim()) {
       setError("Please fill in the company, the role title and the job description.");
@@ -129,8 +133,21 @@ export default function CoachCard() {
             Built only from the job description you pasted. CareerOS does not research the company.
           </p>
           {questions.map((q, index) => (
-            <QuestionPanel key={`${index}-${q.question}`} question={q} number={index + 1} context={context} />
+            <QuestionPanel
+              key={`${index}-${q.question}`}
+              question={q}
+              number={index + 1}
+              context={context}
+              onFeedback={(result) => setFeedbacks((current) => ({ ...current, [index]: result }))}
+            />
           ))}
+
+          <PlanEmailOptIn
+            targetRole={context.roleTitle}
+            topFixes={[]}
+            agent="coach"
+            report={coachReport(context.roleTitle, context.company, questions, feedbacks)}
+          />
         </div>
       )}
     </>
@@ -172,10 +189,12 @@ function QuestionPanel({
   question,
   number,
   context,
+  onFeedback,
 }: {
   question: CoachQuestion;
   number: number;
   context: Context;
+  onFeedback: (result: FeedbackResult) => void;
 }) {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
@@ -199,6 +218,7 @@ function QuestionPanel({
         answer,
       });
       setFeedback(data);
+      onFeedback(data);
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : "Something went wrong.");
     } finally {

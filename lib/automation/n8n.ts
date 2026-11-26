@@ -5,6 +5,10 @@
  * Privacy rules enforced here (not in the caller):
  *  - Only the fields in ActionPlanPayload can leave the app. Resume text,
  *    LinkedIn text and job descriptions are never accepted by this module.
+ *  - The short plan carries scores and fix titles only. The optional full
+ *    report (the results shown on screen, which can include rewritten lines)
+ *    is sent only when the student ticks a second, separate consent box. It
+ *    goes into the email, never into the sheet.
  *  - The webhook URL (and optional secret) are server-side env vars.
  *  - Nothing is stored or logged by this app.
  */
@@ -16,6 +20,11 @@ export type ActionPlanPayload = {
   linkedin_score: number | null;
   match_score: number | null;
   top_fixes: string[];
+  /** Which agent the email is about, e.g. "profile". */
+  agent: string;
+  /** Ready-to-send subject and HTML, composed by the app (see lib/automation/email.ts). */
+  email_subject: string;
+  email_html: string;
 };
 
 /** True when an n8n webhook is configured (the UI hides the opt-in otherwise). */
@@ -73,6 +82,9 @@ export async function sendActionPlan(payload: ActionPlanPayload): Promise<void> 
     linkedin_score: payload.linkedin_score,
     match_score: payload.match_score,
     top_fixes: payload.top_fixes,
+    agent: payload.agent,
+    email_subject: payload.email_subject,
+    email_html: payload.email_html,
   });
 
   let response: Response;

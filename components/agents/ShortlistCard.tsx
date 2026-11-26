@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import TextField from "./TextField";
+import PlanEmailOptIn from "@/components/PlanEmailOptIn";
+import { shortlistReport } from "@/lib/report";
 import ResumeField from "./ResumeField";
 import { useSharedValue } from "@/lib/shared-value";
 import { ErrorBox, PrivacyNote, Spinner } from "./ProfileCard";
@@ -14,7 +16,7 @@ import type { MatchResult } from "@/lib/agents/match/schema";
 
 const MAX_JOBS = 5;
 
-type JobInput = { id: number; company: string; roleTitle: string; jobDescription: string; url?: string };
+type JobInput = { id: number; company: string; roleTitle: string; jobDescription: string; url?: string; source?: string };
 
 type FoundJob = {
   id: string;
@@ -24,6 +26,7 @@ type FoundJob = {
   jobType: string;
   url: string;
   description: string;
+  source: string;
 };
 
 function emptyJob(id: number): JobInput {
@@ -33,7 +36,7 @@ function emptyJob(id: number): JobInput {
 /**
  * UI card for the Opportunity Shortlister. The student pastes real job posts;
  * each one goes through the Job Match agent and the results are ranked in code.
- * Jobs come from the student's own paste or from a real job search (Remotive);
+ * Jobs come from the student's own paste or from a real job search (Adzuna, Remotive);
  * nothing here invents a job.
  */
 export default function ShortlistCard() {
@@ -46,6 +49,7 @@ export default function ShortlistCard() {
   const [found, setFound] = useState<FoundJob[] | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [finderMessage, setFinderMessage] = useState("");
+  const [sources, setSources] = useState<string[]>([]);
 
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState("");
@@ -80,6 +84,7 @@ export default function ShortlistCard() {
       }
       const list = (data?.jobs ?? []) as FoundJob[];
       setFound(list);
+      setSources(Array.isArray(data?.sources) ? (data.sources as string[]) : []);
       setPicked(list.slice(0, 3).map((job) => job.id));
       if (list.length === 0) {
         setFinderMessage("No matching posts found. Try a broader role title, or paste posts below.");
@@ -116,6 +121,7 @@ export default function ShortlistCard() {
         roleTitle: job.title,
         jobDescription: job.description,
         url: job.url,
+        source: job.source,
       })),
     );
     setNextId((value) => value + chosen.length);
@@ -224,8 +230,9 @@ export default function ShortlistCard() {
         <section className="mt-6 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
           <h2 className="text-sm font-semibold text-slate-800">Find real jobs for me</h2>
           <p className="mt-1 text-xs text-slate-600">
-            Searches current remote job posts from Remotive. Remote roles only, so for on-site or
-            India-based jobs paste the posts yourself below.
+            Searches current job posts from Adzuna (India) when it is set up, and Remotive (remote
+            roles worldwide). Posts from Adzuna come with a short summary only, so open the link and
+            paste the full description for the most accurate score.
           </p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <input
@@ -278,7 +285,7 @@ export default function ShortlistCard() {
                             rel="noopener noreferrer"
                             className="text-indigo-600 underline"
                           >
-                            View on Remotive
+                            View on {job.source}
                           </a>
                         </span>
                       </span>
@@ -295,10 +302,20 @@ export default function ShortlistCard() {
               </button>
               <p className="mt-2 text-xs text-slate-500">
                 Jobs from{" "}
-                <a href="https://remotive.com" target="_blank" rel="noopener noreferrer" className="underline">
-                  Remotive
-                </a>
-                , listed up to 24 hours late.
+                {(sources.length ? sources : ["Remotive"]).map((name, index) => (
+                  <span key={name}>
+                    {index > 0 ? " and " : ""}
+                    <a
+                      href={name === "Adzuna" ? "https://www.adzuna.in" : "https://remotive.com"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
+                      {name}
+                    </a>
+                  </span>
+                ))}
+                . Remotive posts can be up to 24 hours old.
               </p>
             </div>
           )}
@@ -316,7 +333,7 @@ export default function ShortlistCard() {
                     rel="noopener noreferrer"
                     className="ml-2 text-xs font-normal text-indigo-600 underline"
                   >
-                    via Remotive
+                    via {job.source ?? "the source"}
                   </a>
                 )}
               </legend>
@@ -475,6 +492,13 @@ export default function ShortlistCard() {
             Scores are AI-assisted opinions based only on the text you pasted. They are not hiring
             decisions.
           </p>
+
+          <PlanEmailOptIn
+            targetRole={searchRole || "Job shortlist"}
+            topFixes={[]}
+            agent="shortlist"
+            report={shortlistReport(entries)}
+          />
         </div>
       )}
     </>
