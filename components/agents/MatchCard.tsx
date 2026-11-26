@@ -1,5 +1,6 @@
 "use client";
 
+import { recordScore } from "@/lib/history";
 import { useEffect, useState } from "react";
 import MatchResults from "@/components/MatchResults";
 import TextField from "./TextField";
@@ -67,6 +68,7 @@ export default function MatchCard() {
       }
 
       setResult(data as MatchResult);
+      recordScore("match", company ? `${roleTitle} at ${company}` : roleTitle, (data as MatchResult).score.normalisedScore);
     } catch (err) {
       setError(
         err instanceof Error && err.message
@@ -145,7 +147,7 @@ export default function MatchCard() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl btn-primary bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? (
             <>

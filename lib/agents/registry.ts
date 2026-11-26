@@ -4,6 +4,11 @@
  */
 export const AGENTS = [
   {
+    id: "report",
+    label: "Career report",
+    tagline: "Run every agent at once and get one readiness dashboard.",
+  },
+  {
     id: "profile",
     label: "Profile review",
     tagline: "Score your resume and LinkedIn against a target role.",
@@ -27,6 +32,16 @@ export const AGENTS = [
     id: "shortlist",
     label: "Shortlister",
     tagline: "Rank several real job posts against your resume.",
+  },
+  {
+    id: "tailor",
+    label: "Tailor",
+    tagline: "Resume lines and a cover letter for one specific job.",
+  },
+  {
+    id: "progress",
+    label: "Progress",
+    tagline: "Score history and your job application tracker.",
   },
 ] as const;
 

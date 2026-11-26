@@ -1,5 +1,6 @@
 "use client";
 
+import TrackButton from "@/components/TrackButton";
 import { useState } from "react";
 import TextField from "./TextField";
 import PlanEmailOptIn from "@/components/PlanEmailOptIn";
@@ -395,7 +396,7 @@ export default function ShortlistCard() {
         <button
           type="submit"
           disabled={running}
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl btn-primary bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {running ? (
             <>
@@ -442,6 +443,7 @@ export default function ShortlistCard() {
                 <>
                   <p className="mt-2 text-sm font-semibold text-slate-800">{entry.result.verdict.label}</p>
                   <p className="mt-1 text-sm leading-relaxed text-slate-600">{entry.result.verdict.reason}</p>
+                  <TrackButton company={entry.company} role={entry.roleTitle} />
                   <p className="mt-3 text-xs text-slate-500">
                     You show {entry.result.matchedSkills.length} of the skills this job names.
                   </p>

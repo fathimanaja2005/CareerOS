@@ -1,10 +1,257 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter/index.css";
+
+/*
+ * CareerOS design tokens.
+ * The app is written with slate, indigo and white utilities, so remapping them here restyles
+ * every tab at once. Soft Apple-style surfaces: frosted glass over a slow pearl gradient,
+ * near-black ink, and black pill controls. Colour comes from the background and the scores.
+ */
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-slate-50: #f5f4fa;
+  --color-slate-100: #efedf6;
+  --color-slate-200: #e4e1ef;
+  --color-slate-300: #d3d0e2;
+  --color-slate-400: #9b98ad;
+  --color-slate-500: #6e6b80;
+  --color-slate-600: #55526a;
+  --color-slate-700: #3c3a4d;
+  --color-slate-800: #26253a;
+  --color-slate-900: #1d1d1f;
+  --color-slate-950: #000;
+
+  /* The accent is ink: primary buttons and the active tab are black pills. */
+  --color-indigo-50: #f3f0fc;
+  --color-indigo-100: #e8e3f8;
+  --color-indigo-200: #d6cef0;
+  --color-indigo-300: #bbb0e0;
+  --color-indigo-400: #8a8a9c;
+  --color-indigo-500: #3a3a42;
+  --color-indigo-600: #1d1d1f;
+  --color-indigo-700: #151517;
+  --color-indigo-800: #111113;
+  --color-indigo-900: #0b0b0d;
+  --color-indigo-950: #070709;
+
+  --color-emerald-50: #e9f8ef;
+  --color-emerald-100: #d3f1df;
+  --color-emerald-500: #6cc596;
+  --color-emerald-600: #23995a;
+  --color-emerald-700: #1c7a48;
+  --color-emerald-800: #165f38;
+
+  --color-amber-50: #fff4e0;
+  --color-amber-100: #ffe8bd;
+  --color-amber-500: #f2b266;
+  --color-amber-600: #d98200;
+  --color-amber-700: #a86400;
+  --color-amber-800: #854e00;
+  --color-amber-900: #5f3700;
+
+  --color-rose-50: #fff0ef;
+  --color-rose-100: #ffdcda;
+  --color-rose-200: #ffc2be;
+  --color-rose-500: #f08f86;
+  --color-rose-600: #e5392b;
+  --color-rose-700: #bf2a1f;
+  --color-rose-800: #94211a;
+
+  --color-sky-50: #f3f1fa;
+  --color-sky-100: #e8e5f4;
+  --color-sky-600: #6e6b80;
+  --color-sky-900: #3c3a4d;
+
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --shadow-sm: 0 1px 1px rgb(40 30 80 / 0.04), 0 18px 48px -18px rgb(90 70 170 / 0.22);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pearl-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(8vw, 6vh, 0) scale(1.15); }
+}
+@keyframes pearl-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.1); }
+  50% { transform: translate3d(-9vw, 8vh, 0) scale(0.92); }
+}
+@keyframes pearl-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6vw, -8vh, 0) scale(1.2); }
+}
+@keyframes shimmer {
+  to { background-position: 200% 50%; }
+}
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgb(120 100 220 / 0.35); }
+  100% { box-shadow: 0 0 0 10px rgb(120 100 220 / 0); }
+}
 
 html {
   scroll-behavior: smooth;
 }
 
+body {
+  font-family: var(--font-sans);
+  background-color: #f6f4fb;
+  color: var(--color-slate-900);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss03";
+}
+
+h1,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.028em;
+}
+h1 {
+  font-weight: 650;
+}
+h3 {
+  font-weight: 600;
+}
+
 ::selection {
-  background-color: #c7d2fe;
-  color: #1e1b4b;
+  background-color: #d9ccff;
+  color: #1d1d1f;
+}
+
+/* Pearl backdrop: four soft colour fields that drift slowly, like the light on a glass phone. */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(180deg, #f7f5fc 0%, #f3f1fa 100%);
+}
+.ambient span {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.7;
+}
+.ambient .a { width: 46vw; height: 46vw; top: -14vw; left: -8vw; background: #d9c9ff; animation: pearl-a 28s ease-in-out infinite; }
+.ambient .b { width: 40vw; height: 40vw; top: 4vh; right: -10vw; background: #ffd0e6; animation: pearl-b 34s ease-in-out infinite; }
+.ambient .c { width: 38vw; height: 38vw; bottom: -14vw; left: 18vw; background: #ffe2bf; animation: pearl-c 30s ease-in-out infinite; }
+.ambient .d { width: 30vw; height: 30vw; bottom: 8vh; right: 6vw; background: #c6f1dc; animation: pearl-a 36s ease-in-out infinite reverse; }
+
+/* Frosted glass for every card and field. */
+.bg-white {
+  background-color: rgb(255 255 255 / 0.58);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  backdrop-filter: blur(22px) saturate(1.5);
+}
+.border {
+  border-width: 1px;
+}
+section.bg-white,
+form.bg-white,
+div.rounded-2xl.bg-white {
+  border-color: rgb(255 255 255 / 0.85);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 1px 1px rgb(40 30 80 / 0.04),
+    0 24px 56px -24px rgb(90 70 170 / 0.28);
+}
+input,
+textarea,
+select {
+  background-color: rgb(255 255 255 / 0.7) !important;
+  border-color: rgb(210 205 232 / 0.9) !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #8f7bea !important;
+  box-shadow: 0 0 0 4px rgb(143 123 234 / 0.18) !important;
+}
+
+/* Pill controls. */
+button {
+  border-radius: 9999px;
+}
+button:not(.btn-primary):not([role="tab"]) {
+  box-shadow: none !important;
+}
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px;
+  box-shadow: 0 10px 24px -10px rgb(29 29 31 / 0.55) !important;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+}
+.btn-primary:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px -10px rgb(29 29 31 / 0.6) !important;
+}
+.btn-primary:not(:disabled):active {
+  transform: translateY(0) scale(0.99);
+}
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.28) 50%, transparent 80%);
+  background-size: 250% 100%;
+  background-position: -100% 0;
+  opacity: 0;
+  transition: background-position 0.9s ease, opacity 0.3s ease;
+}
+.btn-primary:not(:disabled):hover::after {
+  background-position: 200% 0;
+  opacity: 1;
+}
+
+/* Scroll reveal: Reveal adds .in when the block enters the viewport. */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--delay, 0ms);
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+.tab-enter {
+  animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Pearlescent accent for the key words of a headline. */
+.mark {
+  background: linear-gradient(90deg, #7c5cf0, #e0629f, #f08c4a, #7c5cf0);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
 }

@@ -7,7 +7,7 @@
  */
 
 const WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MINUTES ?? 10) * 60_000;
-const MAX_REQUESTS = Number(process.env.RATE_LIMIT_MAX ?? 10);
+const MAX_REQUESTS = Number(process.env.RATE_LIMIT_MAX ?? 30);
 
 type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();

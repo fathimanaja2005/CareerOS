@@ -1,5 +1,6 @@
 "use client";
 
+import { recordScore } from "@/lib/history";
 import { useEffect, useState } from "react";
 import PlanEmailOptIn from "@/components/PlanEmailOptIn";
 import { profileReport } from "@/lib/report";
@@ -61,6 +62,7 @@ export default function ProfileCard() {
       }
 
       setResult(data as AnalysisResult);
+      recordScore("profile", targetRole, (data as AnalysisResult).resume.score.normalisedScore);
     } catch (err) {
       setError(
         err instanceof Error && err.message
@@ -122,7 +124,7 @@ export default function ProfileCard() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl btn-primary bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? (
             <>
@@ -155,30 +157,9 @@ export default function ProfileCard() {
   );
 }
 
-/** Shared privacy note for every agent card. */
+/** Kept so every card can keep importing it; the privacy line now lives in the README and the footer copy. */
 export function PrivacyNote() {
-  return (
-    <div className="mt-5 flex gap-3 rounded-xl bg-sky-50 p-4 ring-1 ring-sky-100">
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        className="mt-0.5 h-5 w-5 shrink-0 text-sky-600"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 3l7 3v6c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V6l7-3z"
-        />
-      </svg>
-      <p className="text-sm leading-relaxed text-sky-900">
-        Your text is sent to an AI model for analysis and is not stored by this app. Remove phone
-        numbers and addresses before pasting.
-      </p>
-    </div>
-  );
+  return null;
 }
 
 export function Spinner() {

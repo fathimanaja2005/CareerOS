@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TextField from "./TextField";
 import PlanEmailOptIn from "@/components/PlanEmailOptIn";
 import { coachReport } from "@/lib/report";
 import ResumeField from "./ResumeField";
 import { useSharedValue } from "@/lib/shared-value";
 import { ErrorBox, PrivacyNote, Spinner } from "./ProfileCard";
+import { Bar, ScoreRing } from "@/components/charts";
+import { recordScore } from "@/lib/history";
+import { gradeFor, summariseInterview } from "@/lib/interview";
 import type { CoachQuestion, FeedbackResult, QuestionsResult } from "@/lib/agents/coach/schema";
 
 type Context = { roleTitle: string; company: string; jobDescription: string };
@@ -109,7 +112,7 @@ export default function CoachCard() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl btn-primary bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? (
             <>
@@ -132,6 +135,7 @@ export default function CoachCard() {
           <p className="text-sm text-slate-500">
             Built only from the job description you pasted. CareerOS does not research the company.
           </p>
+          <SessionSummary feedbacks={feedbacks} total={questions.length} roleTitle={context.roleTitle} company={context.company} />
           {questions.map((q, index) => (
             <QuestionPanel
               key={`${index}-${q.question}`}
@@ -151,6 +155,64 @@ export default function CoachCard() {
         </div>
       )}
     </>
+  );
+}
+
+/** Running score for the questions answered so far, with a button to save it to the Progress tab. */
+function SessionSummary({
+  feedbacks,
+  total,
+  roleTitle,
+  company,
+}: {
+  feedbacks: Record<number, FeedbackResult>;
+  total: number;
+  roleTitle: string;
+  company: string;
+}) {
+  const [saved, setSaved] = useState(false);
+  const answers = Object.values(feedbacks);
+  const summary = summariseInterview(answers.map((r) => ({ score: r.score.normalisedScore, breakdown: r.breakdown })));
+
+  useEffect(() => setSaved(false), [answers.length]);
+
+  if (summary.answered === 0) return null;
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 className="text-base font-semibold text-slate-900">Your practice so far</h3>
+      <div className="mt-4 flex flex-wrap items-center gap-8">
+        <ScoreRing score={summary.average} label="Average" size={104} />
+        <div className="min-w-[220px] flex-1">
+          <p className="text-lg font-semibold text-slate-900">{gradeFor(summary.average)}</p>
+          <p className="mt-1 text-sm text-slate-600">
+            {summary.answered} of {total} answered. The average is worked out by CareerOS, not the AI.
+          </p>
+          {summary.weakestArea && (
+            <p className="mt-3 text-sm text-slate-700">
+              Weakest area: <span className="font-semibold">{summary.weakestArea}</span>
+            </p>
+          )}
+        </div>
+      </div>
+      {summary.areas.length > 0 && (
+        <div className="mt-5 space-y-3">
+          {summary.areas.map((a) => (
+            <Bar key={a.area} label={a.area} percent={a.percent} />
+          ))}
+        </div>
+      )}
+      <button
+        type="button"
+        disabled={saved}
+        onClick={() => {
+          recordScore("interview", `${roleTitle} at ${company}`, summary.average);
+          setSaved(true);
+        }}
+        className="mt-5 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 disabled:text-emerald-700"
+      >
+        {saved ? "Saved to your progress" : "Save this score to Progress"}
+      </button>
+    </section>
   );
 }
 
