@@ -24,6 +24,7 @@ RULES:
 - Write 6 questions: 2 technical or skill questions taken from the job description requirements, 2 behavioural questions, 1 role-specific scenario, and 1 resume-based question only if a resume is given (otherwise another behavioural question).
 - Base every question ONLY on the job description and resume. Never state facts about the company: you have no internet access.
 - For each question say in one sentence what the interviewer is really looking for.
+- A resume-based question may only mention details that are written in the resume, word for word or clearly the same. Never add methods, tools, steps or numbers the resume does not state (for example, do not say "by checking duplicates" if the resume only says "cleaned data"). Ask the student to explain how they did it instead.
 - Questions must suit a fresher: no senior-level system design.
 OUTPUT valid JSON only:
 {"questions": [{"category": "technical|behavioural|resume-based|role-specific", "question": "", "what_interviewer_looks_for": ""}]}
