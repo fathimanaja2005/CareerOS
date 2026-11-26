@@ -65,7 +65,7 @@ export default function HomePage() {
       </div>
 
       <header className="sticky top-0 z-20 border-b border-white/60 bg-white/50 backdrop-blur-xl">
-        <div className="mx-auto max-w-4xl px-4 pt-4">
+        <div className="mx-auto max-w-[1100px] px-4 pt-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-baseline gap-3">
               <span className="text-xl font-semibold tracking-tight text-slate-900">CareerOS</span>
@@ -104,7 +104,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
+      <main className="mx-auto max-w-[1100px] px-4 py-10 sm:py-14">
         {/* Every card stays mounted so switching tabs keeps what you typed. */}
         {AGENTS.map((agent) => {
           const Card = CARDS[agent.id];
@@ -117,7 +117,7 @@ export default function HomePage() {
       </main>
 
       <footer>
-        <div className="mx-auto max-w-4xl px-4 py-6 text-xs text-slate-500">
+        <div className="mx-auto max-w-[1100px] px-4 py-6 text-xs text-slate-500">
           CareerOS gives an AI-assisted review, not a hiring decision. Always check advice against
           the job description you&apos;re applying to.
           <div className="mt-2">
