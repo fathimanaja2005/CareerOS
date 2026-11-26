@@ -10,6 +10,7 @@ import { ErrorBox, PrivacyNote, Spinner } from "./ProfileCard";
 import { Bar, ScoreRing } from "@/components/charts";
 import { recordScore } from "@/lib/history";
 import { gradeFor, summariseInterview } from "@/lib/interview";
+import { appendSpoken, useSpeech } from "@/lib/speech";
 import type { CoachQuestion, FeedbackResult, QuestionsResult } from "@/lib/agents/coach/schema";
 
 const MAX_QUESTIONS = 36;
@@ -309,6 +310,7 @@ function QuestionPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState<FeedbackResult | null>(null);
+  const speech = useSpeech((spoken) => setAnswer((current) => appendSpoken(current, spoken)));
 
   async function review() {
     if (loading) return;
@@ -355,21 +357,52 @@ function QuestionPanel({
         aria-label={`Your answer to question ${number}`}
         className="mt-4 w-full resize-y rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm leading-relaxed text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
       />
-      <button
-        type="button"
-        onClick={review}
-        disabled={loading}
-        className="mt-3 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {loading ? (
-          <>
-            <Spinner />
-            Reviewing…
-          </>
-        ) : (
-          "Review my answer"
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={review}
+          disabled={loading}
+          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? (
+            <>
+              <Spinner />
+              Reviewing…
+            </>
+          ) : (
+            "Review my answer"
+          )}
+        </button>
+        {speech.supported && (
+          <button
+            type="button"
+            onClick={speech.toggle}
+            aria-pressed={speech.listening}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+          >
+            {speech.listening ? (
+              <>
+                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-rose-500" />
+                Listening… tap to stop
+              </>
+            ) : (
+              <>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="9" y="3" width="6" height="11" rx="3" />
+                  <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+                </svg>
+                Speak your answer
+              </>
+            )}
+          </button>
         )}
-      </button>
+      </div>
+      {speech.supported && (
+        <p className="mt-2 text-xs text-slate-400">
+          Voice is turned into text by your browser&apos;s own speech service. CareerOS never receives the audio.
+        </p>
+      )}
+      {speech.error && <p className="mt-2 text-xs text-rose-600">{speech.error}</p>}
 
       <ErrorBox error={error} />
       {feedback && <FeedbackView feedback={feedback} />}

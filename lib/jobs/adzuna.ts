@@ -5,7 +5,7 @@
  * description, not the full text, so scores from these posts are rougher. Every
  * job keeps Adzuna's own link, as their terms ask. Nothing is invented.
  */
-import { htmlToText, type FoundJob } from "./remotive.ts";
+import { htmlToText, searchPhrases, significantWords, type FoundJob } from "./remotive.ts";
 
 const COUNTRY = "in";
 
@@ -48,22 +48,35 @@ export function normaliseAdzuna(raw: unknown, max = 50): FoundJob[] {
   return jobs;
 }
 
+/** Query variants to try in order: the exact role, the role without seniority words, then any of its main words. */
+export function adzunaQueries(role: string): { what?: string; what_or?: string }[] {
+  const queries: { what?: string; what_or?: string }[] = searchPhrases(role).map((what) => ({ what }));
+  const words = significantWords(role);
+  if (words.length > 0) queries.push({ what_or: words.join(" ") });
+  return queries;
+}
+
 export async function findAdzunaJobs(role: string): Promise<FoundJob[]> {
   const id = process.env.ADZUNA_APP_ID?.trim();
   const key = process.env.ADZUNA_APP_KEY?.trim();
   if (!id || !key) return [];
 
-  const params = new URLSearchParams({
-    app_id: id,
-    app_key: key,
-    what: role,
-    results_per_page: "30",
-    "content-type": "application/json",
-  });
-  const response = await fetch(`https://api.adzuna.com/v1/api/jobs/${COUNTRY}/search/1?${params}`, {
-    signal: AbortSignal.timeout(10_000),
-    next: { revalidate: 60 * 60 },
-  });
-  if (!response.ok) throw new Error(`Adzuna responded with ${response.status}`);
-  return normaliseAdzuna(await response.json());
+  // The first variant that returns posts wins, so a long, specific title still finds something.
+  for (const query of adzunaQueries(role)) {
+    const params = new URLSearchParams({
+      app_id: id,
+      app_key: key,
+      ...query,
+      results_per_page: "30",
+      "content-type": "application/json",
+    });
+    const response = await fetch(`https://api.adzuna.com/v1/api/jobs/${COUNTRY}/search/1?${params}`, {
+      signal: AbortSignal.timeout(10_000),
+      next: { revalidate: 60 * 60 },
+    });
+    if (!response.ok) throw new Error(`Adzuna responded with ${response.status}`);
+    const jobs = normaliseAdzuna(await response.json());
+    if (jobs.length > 0) return jobs;
+  }
+  return [];
 }

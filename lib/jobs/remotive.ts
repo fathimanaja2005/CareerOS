@@ -101,6 +101,32 @@ export function rankByTitle(jobs: FoundJob[], role: string): FoundJob[] {
     .map((entry) => entry.job);
 }
 
+/** Words worth matching on when no title fits exactly: four letters or more, so "IT" and "AI" do not match everything. */
+export function significantWords(role: string): string[] {
+  return [...new Set(tokens(role).filter((word) => word.length >= 4))];
+}
+
+/**
+ * Fallback when no title fits the role exactly: keep posts that mention any
+ * significant word of the role in the title or the start of the description,
+ * best matches first. These are "related" posts, and the student is told so.
+ */
+export function rankLoosely(jobs: FoundJob[], role: string): FoundJob[] {
+  const words = significantWords(role);
+  if (words.length === 0) return [];
+  return jobs
+    .map((job) => {
+      const title = new Set(tokens(job.title));
+      const start = new Set(tokens(job.description.slice(0, 600)));
+      const inTitle = words.filter((word) => title.has(word)).length;
+      const inStart = words.filter((word) => start.has(word)).length;
+      return { job, score: inTitle * 3 + inStart };
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map((entry) => entry.job);
+}
+
 export function normaliseJobs(raw: unknown, max = 100): FoundJob[] {
   const list = (raw as { jobs?: unknown })?.jobs;
   if (!Array.isArray(list)) return [];

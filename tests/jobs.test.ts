@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normaliseAdzuna } from "../lib/jobs/adzuna.ts";
-import { htmlToText, normaliseJobs, rankByTitle, searchPhrases, searchUrls } from "../lib/jobs/remotive.ts";
+import { adzunaQueries, normaliseAdzuna } from "../lib/jobs/adzuna.ts";
+import { htmlToText, normaliseJobs, rankByTitle, rankLoosely, searchPhrases, searchUrls, significantWords } from "../lib/jobs/remotive.ts";
 
 test("htmlToText strips tags and keeps list structure", () => {
   const text = htmlToText("<p>Hello &amp; welcome</p><ul><li>SQL</li><li>Excel</li></ul><script>x()</script>");
@@ -86,4 +86,30 @@ test("normaliseAdzuna keeps complete Adzuna posts and labels the source", () => 
   assert.equal(jobs[0].source, "Adzuna");
   assert.equal(jobs[0].location, "Kochi, Kerala");
   assert.deepEqual(normaliseAdzuna(null), []);
+});
+
+const job = (title: string, description = "A role at a company that needs good people. ".repeat(3)) => ({
+  id: title, company: "Acme", title, location: "Remote", jobType: "", url: "https://remotive.com/x", description, source: "Remotive",
+});
+
+test("a long fresher title finds nothing strictly but related posts loosely", () => {
+  const jobs = [job("Senior Backend Engineer"), job("Automation Engineer"), job("QA Analyst", "We automate testing for web apps."), job("Chef")];
+  assert.equal(rankByTitle(jobs, "IT & Automation Intern").length, 1);
+  assert.deepEqual(significantWords("IT & Automation Intern"), ["automation"]);
+  assert.deepEqual(rankLoosely(jobs, "IT & Automation Intern").map((j) => j.title), ["Automation Engineer"]);
+});
+
+test("loose ranking returns nothing when no significant word matches", () => {
+  assert.deepEqual(rankLoosely([job("Chef")], "IT & Automation Intern"), []);
+  assert.deepEqual(rankLoosely([job("Chef")], "IT"), []);
+});
+
+test("Adzuna queries go from exact to broad", () => {
+  assert.deepEqual(adzunaQueries("Junior Data Analyst"), [
+    { what: "Junior Data Analyst" },
+    { what: "Data Analyst" },
+    { what_or: "data analyst" },
+  ]);
+  assert.deepEqual(adzunaQueries("IT & Automation Intern")[0], { what: "IT & Automation Intern" });
+  assert.deepEqual(adzunaQueries("IT & Automation Intern").at(-1), { what_or: "automation" });
 });

@@ -51,6 +51,7 @@ export default function ShortlistCard() {
   const [picked, setPicked] = useState<string[]>([]);
   const [finderMessage, setFinderMessage] = useState("");
   const [sources, setSources] = useState<string[]>([]);
+  const [relaxed, setRelaxed] = useState(false);
 
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState("");
@@ -72,6 +73,7 @@ export default function ShortlistCard() {
     setFinderMessage("");
     setFound(null);
     setPicked([]);
+    setRelaxed(false);
     if (searchRole.trim().length < 3) {
       setFinderMessage("Enter the role you want jobs for.");
       return;
@@ -86,9 +88,10 @@ export default function ShortlistCard() {
       const list = (data?.jobs ?? []) as FoundJob[];
       setFound(list);
       setSources(Array.isArray(data?.sources) ? (data.sources as string[]) : []);
+      setRelaxed(data?.relaxed === true);
       setPicked(list.slice(0, 3).map((job) => job.id));
       if (list.length === 0) {
-        setFinderMessage("No matching posts found. Try a broader role title, or paste posts below.");
+        setFinderMessage("No posts found right now. Try a shorter title such as \"Automation\" or \"Analyst\", or paste posts below.");
       }
     } catch (err) {
       setFinderMessage(err instanceof Error ? err.message : "Job search failed.");
@@ -257,6 +260,11 @@ export default function ShortlistCard() {
           {finderMessage && (
             <p role="status" className="mt-2 text-xs text-slate-700">
               {finderMessage}
+            </p>
+          )}
+          {found && found.length > 0 && relaxed && (
+            <p role="status" className="mt-2 text-xs text-slate-700">
+              No post matched that exact title, so these are the closest related roles.
             </p>
           )}
           {found && found.length > 0 && (

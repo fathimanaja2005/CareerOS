@@ -24,8 +24,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { jobs, sources } = await searchJobs(role);
-    return NextResponse.json({ jobs, sources });
+    const { jobs, sources, relaxed } = await searchJobs(role);
+    return NextResponse.json({ jobs, sources, relaxed });
   } catch {
     return NextResponse.json(
       { error: "Job search is unavailable right now. You can still paste job posts yourself." },

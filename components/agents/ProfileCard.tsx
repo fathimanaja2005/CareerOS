@@ -6,6 +6,7 @@ import PlanEmailOptIn from "@/components/PlanEmailOptIn";
 import { profileReport } from "@/lib/report";
 import ResultsView from "@/components/ResultsView";
 import ResumeField from "./ResumeField";
+import AtsCard from "./AtsCard";
 import { useSharedValue } from "@/lib/shared-value";
 import type { AnalysisResult } from "@/lib/agents/profile/schema";
 
@@ -142,6 +143,7 @@ export default function ProfileCard() {
 
       <div id="profile-results" className="mt-10 scroll-mt-6">
         {result && <ResultsView result={result} />}
+        {result && resumeText.trim() && <AtsCard text={resumeText} />}
         {result && (
           <PlanEmailOptIn
             targetRole={result.targetRole}

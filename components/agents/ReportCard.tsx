@@ -109,7 +109,7 @@ export default function ReportCard() {
 
   return (
     <>
-      <div className="mb-10">
+      <div className="mb-10 no-print">
         <p className="text-sm font-medium text-slate-500">Career report</p>
         <h1 className="mt-3 max-w-2xl text-4xl leading-[1.08] text-slate-900 sm:text-6xl">
           Where you stand, and <span className="mark">what to do next</span>
@@ -236,8 +236,29 @@ function Dashboard({ report }: { report: Report }) {
     match?.missingSkills.map((s) => s.skill) ?? [],
   ).slice(0, 8);
 
+  function downloadPdf() {
+    // The browser's print view saves as PDF; the page title becomes the file name.
+    const previous = document.title;
+    document.title = `CareerOS report - ${report.roleTitle}`;
+    const restore = () => {
+      document.title = previous;
+      window.removeEventListener("afterprint", restore);
+    };
+    window.addEventListener("afterprint", restore);
+    window.print();
+  }
+
   return (
     <div className="space-y-5">
+      <div className="no-print flex justify-end">
+        <button
+          type="button"
+          onClick={downloadPdf}
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+        >
+          Download PDF
+        </button>
+      </div>
       <Reveal delay={0}>
 <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">

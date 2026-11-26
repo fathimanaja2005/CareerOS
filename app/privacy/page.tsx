@@ -32,6 +32,10 @@ export default function PrivacyPage() {
           does not write it to logs. Your resume stays in your own browser and is never uploaded to
           your account.
         </p>
+        <p className="mt-2 leading-relaxed text-slate-700">
+          If you use the Speak your answer button, your browser&apos;s own speech service turns your
+          voice into text. CareerOS never receives or stores the audio, only the text it produces.
+        </p>
 
         <h2 className="mt-8 text-lg font-semibold text-slate-900">If you do not sign in</h2>
         <p className="mt-2 leading-relaxed text-slate-700">
