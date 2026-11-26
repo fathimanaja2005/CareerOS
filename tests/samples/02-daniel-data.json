@@ -1,0 +1,7 @@
+{
+  "name": "Daniel Okafor (fictional)",
+  "note": "Computer science graduate applying for a data role. Resume only, no LinkedIn text.",
+  "targetRole": "Junior Data Analyst",
+  "resumeText": "DANIEL OKAFOR\nBSc Computer Science, Westmere University (graduating July 2027)\ndaniel.okafor@example.com | github.com/example-daniel\n\nSUMMARY\nComputer science student interested in data and analytics.\n\nEDUCATION\nWestmere University - BSc Computer Science, expected July 2027\nRelevant modules: Databases, Statistics, Machine Learning, Algorithms\n\nEXPERIENCE\nIT Support Assistant - Westmere University Library (Oct 2025 - present)\n- Fixed printers and helped students with Wi-Fi\n- Logged tickets in a spreadsheet\n\nPROJECTS\nCoursework: analysed a public transport dataset with Python and pandas\n- Cleaned 40,000 rows of trip data\n- Made charts of peak travel times\n- Wrote a 10-page report\n\nCoursework: built a small Flask app for tracking study hours\n- Used SQLite for storage\n- Deployed it on a free hosting service\n\nSKILLS\nPython, pandas, SQL, Excel, Git, basic Flask",
+  "linkedinText": ""
+}
