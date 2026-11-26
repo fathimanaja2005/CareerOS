@@ -13,6 +13,11 @@ export const AGENTS = [
     label: "Job match",
     tagline: "Check how well your profile fits a specific job description.",
   },
+  {
+    id: "coach",
+    label: "Interview coach",
+    tagline: "Practise likely questions for one job and get your answers reviewed.",
+  },
 ] as const;
 
 export type AgentId = (typeof AGENTS)[number]["id"];
